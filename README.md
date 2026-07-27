@@ -42,3 +42,5 @@ driven over its MCP server:
 Dial typography follows the rule: diffusion makes pixels, code makes type.
 
 *Fictional brand. All product imagery AI-generated. Made with WanGP.*
+
+<!-- auto-deploy verified 2026-07-27 17:22 -->
