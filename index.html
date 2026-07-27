@@ -22,7 +22,10 @@
   --sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: auto; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+a:focus-visible, button:focus-visible, input:focus-visible,
+#waitlist input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 body {
   background: var(--bg);
   color: var(--ink);
@@ -81,7 +84,7 @@ nav .wordmark { font-family: var(--serif); font-size: 1.05rem; letter-spacing: 0
 nav .wordmark em { font-style: italic; color: var(--gold); }
 nav .links { display: flex; gap: 2.2rem; align-items: center; }
 nav .links a { color: var(--ink-dim); text-decoration: none; font-size: 0.68rem; letter-spacing: 0.28em;
-  text-transform: uppercase; transition: color 0.3s; }
+  text-transform: uppercase; transition: color 0.3s; padding: 0.8rem 0.3rem; margin: -0.8rem -0.3rem; }
 nav .links a:hover { color: var(--gold-bright); }
 
 /* ---------- scrub sections ---------- */
@@ -473,7 +476,22 @@ fetch("frames/manifest.json?" + ASSET_VERSION, { cache: "no-store" })
   .finally(() => {
     loader.classList.add("done");
     drawFrame(SEQS.orbit, 0);
-    loadSeq("macro").then(() => loadSeq("assembly"));
+    /* macro + assembly stream in only once the visitor starts the journey —
+       bounce visitors never download the extra ~19MB */
+    let deferredStarted = false;
+    const startDeferred = () => {
+      if (deferredStarted) return;
+      deferredStarted = true;
+      loadSeq("macro").then(() => loadSeq("assembly"));
+    };
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) { startDeferred(); io.disconnect(); }
+      }, { rootMargin: "200% 0px" });
+      io.observe(document.getElementById("story"));
+    } else {
+      startDeferred();
+    }
   });
 
 /* ================= scroll orchestration ================= */
