@@ -385,10 +385,13 @@ footer .fine { font-size: 0.6rem; letter-spacing: 0.25em; color: var(--ink-faint
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ================= frame sequences ================= */
+/* mobileZoom: how far past contain-fit to zoom on portrait screens — crops only
+   black void; tuned per clip composition (orbit = centered watch, macro = full-bleed
+   dial, assembly = wide component spread) */
 const SEQS = {
-  orbit:    { canvas: document.getElementById("orbitCanvas"),    container: document.getElementById("orbitScroll"),    frames: [], count: 0, loaded: 0, lastDrawn: -1 },
-  macro:    { canvas: document.getElementById("macroCanvas"),    container: document.getElementById("macroScroll"),    frames: [], count: 0, loaded: 0, lastDrawn: -1 },
-  assembly: { canvas: document.getElementById("assemblyCanvas"), container: document.getElementById("assemblyScroll"), frames: [], count: 0, loaded: 0, lastDrawn: -1 },
+  orbit:    { canvas: document.getElementById("orbitCanvas"),    container: document.getElementById("orbitScroll"),    frames: [], count: 0, loaded: 0, lastDrawn: -1, mobileZoom: 2.2 },
+  macro:    { canvas: document.getElementById("macroCanvas"),    container: document.getElementById("macroScroll"),    frames: [], count: 0, loaded: 0, lastDrawn: -1, mobileZoom: 1.4 },
+  assembly: { canvas: document.getElementById("assemblyCanvas"), container: document.getElementById("assemblyScroll"), frames: [], count: 0, loaded: 0, lastDrawn: -1, mobileZoom: 1.5 },
 };
 
 const ASSET_VERSION = "v2-webp";
@@ -415,8 +418,8 @@ function drawFrame(s, idx) {
   const cw = s.canvas.width, ch = s.canvas.height;
   const iw = img.naturalWidth, ih = img.naturalHeight;
   const mobile = window.innerWidth <= 760;
-  /* cover on desktop; contain on mobile (frames are black — letterbox is invisible) */
-  const scale = mobile ? Math.min(cw / iw, ch / ih) * 1.06 : Math.max(cw / iw, ch / ih);
+  /* cover on desktop; zoomed contain on mobile (frames are black — the crop eats only void) */
+  const scale = mobile ? Math.min(cw / iw, ch / ih) * (s.mobileZoom || 1.06) : Math.max(cw / iw, ch / ih);
   const dw = iw * scale, dh = ih * scale;
   ctx.fillStyle = "#070604";
   ctx.fillRect(0, 0, cw, ch);
