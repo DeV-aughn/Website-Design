@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AURUM &amp; NOIR — The Eclipse</title>
 <meta name="description" content="The Eclipse. A tourbillon chronograph in grade-5 titanium. Edition of 88.">
+<meta name="theme-color" content="#070604">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
@@ -16,8 +17,8 @@
   --gold-bright: #e8c76e;
   --gold-dim: rgba(201, 162, 75, 0.35);
   --ink: #efe9dd;
-  --ink-dim: rgba(239, 233, 221, 0.55);
-  --ink-faint: rgba(239, 233, 221, 0.28);
+  --ink-dim: rgba(239, 233, 221, 0.66);
+  --ink-faint: rgba(239, 233, 221, 0.45);
   --serif: "Cormorant Garamond", "Didot", "Bodoni MT", Georgia, serif;
   --sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
 }
@@ -174,7 +175,7 @@ nav .links a:hover { color: var(--gold-bright); }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background:
     linear-gradient(180deg, rgba(7,6,4,0.82) 0%, rgba(7,6,4,0.38) 38%, rgba(7,6,4,0.45) 70%, rgba(7,6,4,0.88) 100%),
-    url("assets/atmosphere.jpg?v1-final") center / cover no-repeat,
+    url("assets/atmosphere.webp?v2-webp") center / cover no-repeat,
     var(--bg);
   padding: 20vh 8vw; text-align: center; overflow: hidden; }
 #edition::before { content: ""; position: absolute; inset: 0;
@@ -224,6 +225,9 @@ footer .fine { font-size: 0.6rem; letter-spacing: 0.25em; color: var(--ink-faint
 
 /* ---------- mobile ---------- */
 @media (max-width: 760px) {
+  #edition { background-image:
+    linear-gradient(180deg, rgba(7,6,4,0.82) 0%, rgba(7,6,4,0.38) 38%, rgba(7,6,4,0.45) 70%, rgba(7,6,4,0.88) 100%),
+    url("assets/atmosphere-sm.webp?v2-webp"); }
   nav { padding: 1.1rem 1.4rem; }
   nav .links { gap: 1.2rem; }
   nav .links a:not(.keep) { display: none; }
@@ -387,9 +391,11 @@ const SEQS = {
   assembly: { canvas: document.getElementById("assemblyCanvas"), container: document.getElementById("assemblyScroll"), frames: [], count: 0, loaded: 0, lastDrawn: -1 },
 };
 
-const ASSET_VERSION = "v1-final";
+const ASSET_VERSION = "v2-webp";
+/* phones get the 960w set (~6MB total) — desktop gets 1920w (~16MB) */
+const FRAME_DIR = window.matchMedia("(max-width: 760px)").matches ? "frames-sm/" : "frames/";
 function framePath(seq, i) {
-  return "frames/" + seq + "/frame_" + String(i + 1).padStart(4, "0") + ".jpg?" + ASSET_VERSION;
+  return FRAME_DIR + seq + "/frame_" + String(i + 1).padStart(4, "0") + ".webp?" + ASSET_VERSION;
 }
 
 function sizeCanvas(s) {
@@ -401,6 +407,10 @@ function sizeCanvas(s) {
 function drawFrame(s, idx) {
   const img = s.frames[idx] && s.frames[idx].complete && s.frames[idx].naturalWidth ? s.frames[idx] : nearestLoaded(s, idx);
   if (!img) return;
+  /* self-heal stale buffers (device rotation, URL-bar resize, emulation) */
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const wantW = Math.round(s.canvas.clientWidth * dpr), wantH = Math.round(s.canvas.clientHeight * dpr);
+  if (s.canvas.width !== wantW || s.canvas.height !== wantH) { s.canvas.width = wantW; s.canvas.height = wantH; }
   const ctx = s.canvas.getContext("2d");
   const cw = s.canvas.width, ch = s.canvas.height;
   const iw = img.naturalWidth, ih = img.naturalHeight;
